@@ -46,6 +46,8 @@ devtools.zip
 
 # ---- Local-reports ----------------------------------------
 sandbox/eda-1/figure_rmd/*.png
+sandbox/eda-1/eda-1.html
+sandbox/eda-1/eda-1.md
 
 # ---- Caches -----------------------------------------------
 # Exclude caches in case they contain PHI
