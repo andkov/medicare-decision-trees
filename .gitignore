@@ -44,6 +44,9 @@ devtools.zip
 !data/unshared/raw/README.md
 !data/unshared/derived/README.md
 
+# ---- Local-reports ----------------------------------------
+sandbox/eda-1/figure_rmd/*.png
+
 # ---- Caches -----------------------------------------------
 # Exclude caches in case they contain PHI
 cache/
