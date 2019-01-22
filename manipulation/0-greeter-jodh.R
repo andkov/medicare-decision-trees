@@ -29,17 +29,10 @@ requireNamespace("dplyr"                   ) #Avoid attaching dplyr, b/c its fun
 requireNamespace("testit"                  ) #For asserting conditions meet expected patterns.
 
 # ---- declare-globals ---------------------------------------------------------
-path_input <- "data-unshared/raw/Medicare_Provider_Util_Payment_PUF_CY2014.txt"
-
+path_input <- "./data-unshared/raw/pt_with_locations_reduced.csv"
 
 # ---- load-data ---------------------------------------------------------------
-ds0 <- readr::read_delim(
-   file            =  path_input
-  , delim         =  "\t"
-  , escape_double = FALSE
-  , trim_ws       = TRUE
-  
-  )
+ds0 <- readr::read_csv(file = path_input)
 
 # ---- tweak-data ------------------------------
 ds <- ds0
@@ -81,8 +74,18 @@ ds %>% TabularManifest::histogram_continuous("pt_bene_ratio"                    
 ds %>% TabularManifest::histogram_continuous("Number_of_Services"                                   )
 ds %>% TabularManifest::histogram_continuous("Total_Medicare_Standardized_Payment_Amount"           )
 
-  
-# ---- define-utility-functions ---------------
+# ----- pairs -----------------------------------
+selected_columns <- c(
+"Total_Medicare_Standardized_Payment_Amount" 
+,"Number_of_Services" 
+,"proxy_for_n_of_new_patients" 
+,"Number_of_Medicare_Beneficiaries"
+,"chrg_allowed_amt_ratio"   
+,"Number_of_HCPCS" 
+)
+ds %>% 
+  dplyr::select(selected_columns) %>% 
+   GGally::ggpairs()
 
 # ---- save-to-disk ----------------------------
 
