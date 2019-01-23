@@ -36,49 +36,71 @@ ds0 <- readr::read_csv(file = path_input)
 
 # ---- tweak-data ------------------------------
 ds <- ds0
+# transform variable names
 names(ds) <- gsub(" |-", "_", names(ds))
 names(ds) <- gsub("#", "n", names(ds))
 names(ds) <- gsub("-", "n", names(ds))
 names(ds) <- gsub("\\(|\\)", "", names(ds))
+names(ds) <- tolower(names(ds))
 
+# readr::write_csv(as.data.frame(names(ds)), "./data-unshared/derived/rawnames.csv")
 ds %>% dplyr::glimpse(50)  
+
+# ---- group-variables ---------------------------------------
+practice <- c(
+ "female" # Gender of the Physical Therapist                                               
+ ,"dpt"# Reporting DPT degree                                              
+ ,"number_of_hcpcs"# Number of HCPCS/CPT codes billed 
+ #  HealthCare Common Procedure System/Current Procedural terminology
+ ,"number_of_medicare_beneficiaries"  # Number of beneficiaries served
+ ,"chrg_allowed_amt_ratio" # Charge to Medicare allowed amount ratio                         
+ ,"medicare_stnd_amt_bene" # Average Medicare standardized payment amount per beneficiary                               
+ ,"physical_agent_pct" # Proportion of physical agents 
+ ,"proxy_for_n_of_new_patients"  # Number of new patients                        
+ ,"average_age_of_beneficiaries" # Average age of beneficiaries                        
+ ,"average_hcc_risk_score_of_beneficiaries" # Average HCC risk score of beneficiaries              
+ 
+ ,"large_metro_area"                                     
+ ,"mid_sized_metro_area"                                 
+ ,"small_metro_area"                                     
+ ,"non_metropolitan_area_or_missing_9_counties_missing"  
+ )
+
+market <- c(
+ "pcp_per_10k_pop_14" # Primary care physicians per 10,000 population, county level                                   
+,"pt_per_10k_pop_09" # PTs per 10,000 population (2009), county level                                   
+,"medicare_ffs_benef_average_age_fee_for_service_2014" # Average age of beneficiaries, county level 
+,"pct_mdcr_ffs_benef_female_14" # Percent of female beneficiaries, county level                         
+,"medicare_ffs_bene_avg_hcc_score__fee_for_service_2014" # Average HCC risk score of beneficiaries, county level
+,"pct_mdcr_benef_elig_medcaid_14" # Percent of beneficiaries eligible for Medicaid, county level                      
+,"pct_mdcr_ff_benef_pop_14" # Beneficiaries as a share of total population, county level                           
+ ,"standardized_risk_adjusted_per_capita_medicare_costs" # Standardized Risk-Adjusted Per Capita Medicare Costs, county level 
+,"median_household_income__2014" # Median Household Income, county level                        
+,"pct_65older_in_deep_poverty_14" # Percent of persons 65 or older in deep poverty, county level                       
+,"pt_bene_ratio"  # PTs per 10,000 beneficiaries, county level                                      
+)
+
+outcome <- c(
+ "number_of_services"   # Number of services performed                                
+,"total_medicare_standardized_payment_amount" # Total Medicare standardized payment amount   
+)
+
+unaccounted <- c("therapeutic_pct")
+# sort the variables according to the level
+# ds <- ds %>% dplyr::select(c(practice, market, outcome, unaccounted))
+# store for possible tweaking in spreadsheets
+# readr::write_csv(as.data.frame(names(ds1)), "./data-unshared/derived/rawnames.csv")
+
+
 
 # ----- marginals --------------------
  
-ds %>% TabularManifest::histogram_discrete("female"                                               )
-ds %>% TabularManifest::histogram_discrete("dpt"                                                  )
-ds %>% TabularManifest::histogram_continuous("Number_of_HCPCS"                                      )
-ds %>% TabularManifest::histogram_continuous("Number_of_Medicare_Beneficiaries"                     )
-ds %>% TabularManifest::histogram_continuous("chrg_allowed_amt_ratio"                               )
-ds %>% TabularManifest::histogram_continuous("medicare_stnd_amt_bene"                               )
-ds %>% TabularManifest::histogram_continuous("physical_agent_pct"                                   )
-ds %>% TabularManifest::histogram_continuous("therapeutic_pct"                                      )
-ds %>% TabularManifest::histogram_continuous("proxy_for_n_of_new_patients"                          )
-ds %>% TabularManifest::histogram_continuous("Average_Age_of_Beneficiaries"                         )
-ds %>% TabularManifest::histogram_continuous("Average_HCC_Risk_Score_of_Beneficiaries"              )
-ds %>% TabularManifest::histogram_continuous("Mid_sized_metro_area"                                 )
-ds %>% TabularManifest::histogram_continuous("Small_metro_area"                                     )
-ds %>% TabularManifest::histogram_continuous("Non_metropolitan_area_or_missing_9_counties_missing"  )
-ds %>% TabularManifest::histogram_continuous("Large_metro_area"                                     )
-ds %>% TabularManifest::histogram_continuous("Standardized_Risk_Adjusted_Per_Capita_Medicare_Costs" )
-ds %>% TabularManifest::histogram_continuous("pcp_per_10k_pop_14"                                   )
-ds %>% TabularManifest::histogram_continuous("pt_per_10k_pop_09"                                    )
-ds %>% TabularManifest::histogram_continuous("pct_mdcr_FF_benef_pop_14"                             )
-ds %>% TabularManifest::histogram_continuous("Medicare_FFS_Benef_Average_Age_Fee_for_Service_2014"  )
-ds %>% TabularManifest::histogram_continuous("pct_mdcr_FFS_Benef_Female_14"                         )
-ds %>% TabularManifest::histogram_continuous("Medicare_FFS_Bene_Avg_HCC_Score__Fee_for_Service_2014")
-ds %>% TabularManifest::histogram_continuous("pct_mdcr_Benef_Elig_Medcaid_14"                       )
-ds %>% TabularManifest::histogram_continuous("Median_Household_Income__2014"                        )
-ds %>% TabularManifest::histogram_continuous("pct_65older_in_Deep_Poverty_14"                       )
-ds %>% TabularManifest::histogram_continuous("pt_bene_ratio"                                        )
-ds %>% TabularManifest::histogram_continuous("Number_of_Services"                                   )
-ds %>% TabularManifest::histogram_continuous("Total_Medicare_Standardized_Payment_Amount"           )
-
-  
 # ---- define-utility-functions ---------------
 
 # ---- save-to-disk ----------------------------
-
+ds %>% 
+  dplyr::select(c(practice, market, outcome)) %>% 
+  saveRDS("./data-unshared/derived/dto-0-greeted.rds")
 
 
 
