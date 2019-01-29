@@ -90,9 +90,9 @@ bag_boston <- randomForest::randomForest(
 bag_boston
 
 # how does bagging compare
-
-
-
+yhat_bag <- stats::predict(bag_boston, newdata = ds_test)
+plot(yhat_bag, ds_test$medv)
+mean( (yhat_bag - ds_test$medv)^2 )
 
 
 
