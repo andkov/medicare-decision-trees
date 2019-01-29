@@ -29,10 +29,17 @@ requireNamespace("dplyr"                   ) #Avoid attaching dplyr, b/c its fun
 requireNamespace("testit"                  ) #For asserting conditions meet expected patterns.
 
 # ---- declare-globals ---------------------------------------------------------
-path_input <- "./data-unshared/raw/pt_with_locations_reduced.csv"
+path_input <- "data-unshared/raw/Medicare_Provider_Util_Payment_PUF_CY2014.txt"
+
 
 # ---- load-data ---------------------------------------------------------------
-ds0 <- readr::read_csv(file = path_input)
+ds0 <- readr::read_delim(
+   file            =  path_input
+  , delim         =  "\t"
+  , escape_double = FALSE
+  , trim_ws       = TRUE
+  
+  )
 
 # ---- tweak-data ------------------------------
 ds <- ds0
