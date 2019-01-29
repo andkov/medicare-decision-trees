@@ -41,6 +41,7 @@ names(ds) <- gsub(" |-", "_", names(ds))
 names(ds) <- gsub("#", "n", names(ds))
 names(ds) <- gsub("-", "n", names(ds))
 names(ds) <- gsub("\\(|\\)", "", names(ds))
+names(ds) <- gsub("__", "_", names(ds)) # double underscore into one
 names(ds) <- tolower(names(ds))
 
 # readr::write_csv(as.data.frame(names(ds)), "./data-unshared/derived/rawnames.csv")
@@ -51,9 +52,11 @@ ds %>% dplyr::glimpse(50)
 ds <- ds %>% 
   dplyr::rename_(
     "average_hcc_risk_score"  = "average_hcc_risk_score_of_beneficiaries"
-    ,"non_metropolitan_area"  = "non_metropolitan_area_or_missing_9_counties_missing"
+    # ,"non_metropolitan_area"  = "non_metropolitan_area_or_missing_9_counties_missing"
+    ,"non_metro_area"  = "non_metropolitan_area_or_missing_9_counties_missing"
+    ,"mid_metro_area"  = "mid_sized_metro_area"
     ,"mean_age_benef_county"  = "medicare_ffs_benef_average_age_fee_for_service_2014"
-    ,"mean_hcc_benef_county"  = "medicare_ffs_bene_avg_hcc_score__fee_for_service_2014"
+    ,"mean_hcc_benef_county"  = "medicare_ffs_bene_avg_hcc_score_fee_for_service_2014"
     ,"medicare_cost"          = "standardized_risk_adjusted_per_capita_medicare_costs"
     ,"total_medicare_payment" = "total_medicare_standardized_payment_amount"
   )
@@ -74,10 +77,11 @@ practice <- c(
  ,"average_hcc_risk_score"                    # Average HCC risk score of beneficiaries              
  
  ,"large_metro_area"                                     
- ,"mid_sized_metro_area"                                 
+ ,"mid_metro_area"                                 
+ # ,"mid_sized_metro_area"                                 
  ,"small_metro_area"                                     
  # ,"non_metropolitan_area_or_missing_9_counties_missing"  
- ,"non_metropolitan_area"  
+ ,"non_metro_area"  
  )
 
 market <- c(
@@ -92,7 +96,7 @@ market <- c(
 ,"pct_mdcr_ff_benef_pop_14" # Beneficiaries as a share of total population, county level                           
  # ,"standardized_risk_adjusted_per_capita_medicare_costs" # Standardized Risk-Adjusted Per Capita Medicare Costs, county level 
  ,"medicare_cost"                                        # Standardized Risk-Adjusted Per Capita Medicare Costs, county level 
-,"median_household_income__2014" # Median Household Income, county level                        
+,"median_household_income_2014" # Median Household Income, county level                        
 ,"pct_65older_in_deep_poverty_14" # Percent of persons 65 or older in deep poverty, county level                       
 ,"pt_bene_ratio"  # PTs per 10,000 beneficiaries, county level                                      
 )
@@ -116,8 +120,12 @@ unaccounted <- c("therapeutic_pct")
 # ---- define-utility-functions ---------------
 
 # ---- save-to-disk ----------------------------
-ds %>% 
-  dplyr::select(c(practice, market, outcome)) %>% 
+ds_out <- ds %>% 
+  dplyr::select(c(practice, market, outcome))
+
+ds_out %>% dplyr::glimpse()
+
+ds_out %>% 
   saveRDS("./data-unshared/derived/dto-0-greeted.rds")
 
 
