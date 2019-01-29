@@ -26,20 +26,28 @@ requireNamespace("DT", quietly=TRUE) # for dynamic tables
 # ---- load-sources ------------------------------------------------------------
 #Load any source files that contain/define functions, but that don't load any other types of variables
 #   into memory.  Avoid side effects and don't pollute the global environment.
-source("./manipulation/function-support.R")  # assisting functions for data wrangling and testing
-source("./manipulation/object-glossary.R")   # object definitions
+# source("./manipulation/function-support.R")  # assisting functions for data wrangling and testing
+# source("./manipulation/object-glossary.R")   # object definitions
 source("./scripts/common-functions.R")        # reporting functions and quick views
 source("./scripts/graphing/graph-presets.R") # font and color conventions
 
 # ---- load-data -------------------------------------------------------------
+ds <-  MASS::Boston
+
+set.seed(42)
+train_rows <- sample(1:nrow(ds), nrow(ds)/2)  
 
 # ---- inspect-data -------------------------------------------------------------
-
+ds %>% dplyr::glimpse()
+train_ds %>% dplyr::glimpse()
 # ---- tweak-data --------------------------------------------------------------
 
 # ---- basic-table --------------------------------------------------------------
 
 # ---- basic-graph --------------------------------------------------------------
+
+# ----- basic-model -------------------------------------------------------------
+tree_boston <- 
 
 # Sonata form report structure
 # ---- dev-a-0 ---------------------------------
