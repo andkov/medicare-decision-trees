@@ -19,6 +19,7 @@ requireNamespace("scales", quietly=TRUE) #For formating values in graphs
 requireNamespace("RColorBrewer", quietly=TRUE)
 requireNamespace("dplyr", quietly=TRUE)
 requireNamespace("DT", quietly=TRUE) # for dynamic tables
+requireNamespace("tree", quietly=TRUE) # for regression and classification trees
 # requireNamespace("plyr", quietly=TRUE)
 # requireNamespace("reshape2", quietly=TRUE) #For converting wide to long
 # requireNamespace("mgcv, quietly=TRUE) #For the Generalized Additive Model that smooths the longitudinal graphs.
@@ -34,12 +35,16 @@ source("./scripts/graphing/graph-presets.R") # font and color conventions
 # ---- load-data -------------------------------------------------------------
 ds <-  MASS::Boston
 
-set.seed(42)
+set.seed(1)
 train_rows <- sample(1:nrow(ds), nrow(ds)/2)  
 
 # ---- inspect-data -------------------------------------------------------------
 ds %>% dplyr::glimpse()
-train_ds %>% dplyr::glimpse()
+
+
+ds_train <- ds[ train_rows, ]
+ds_test  <- ds[-train_rows, ]
+
 # ---- tweak-data --------------------------------------------------------------
 
 # ---- basic-table --------------------------------------------------------------
@@ -47,7 +52,56 @@ train_ds %>% dplyr::glimpse()
 # ---- basic-graph --------------------------------------------------------------
 
 # ----- basic-model -------------------------------------------------------------
-tree_boston <- 
+tree_boston <- tree::tree(medv ~ ., ds_train)
+summary(tree_boston)
+plot(tree_boston)
+text(tree_boston, pretty = 2)
+
+# diagnose where to prune
+cv_boston <- tree::cv.tree(object = tree_boston)
+cv_boston
+plot(cv_boston$size, cv_boston$dev, type = "b")
+
+# now prune
+prune_boston <- tree::prune.tree(
+  tree = tree_boston
+
+  ,best = 5
+  )
+plot(prune_boston)
+text(prune_boston, pretty = 0)
+
+
+# predict
+yhat <- stats::predict(tree_boston, newdata = ds_test )
+plot(yhat, ds_test$medv)
+abline(0,1)
+mean( (yhat - ds_test$medv)^2)
+
+### Bagging
+
+set.seed(1)
+bag_boston <- randomForest::randomForest(
+  medv ~ .
+  ,data = ds_train
+  ,mtry = 13 # predictors considered at each split
+  ,importance = TRUE
+)
+bag_boston
+
+# how does bagging compare
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Sonata form report structure
 # ---- dev-a-0 ---------------------------------
