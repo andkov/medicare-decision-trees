@@ -116,24 +116,80 @@ g1 %>% quick_save(name = "outcome-correlations",width = 600, height = 900, res =
 (var_practice <- grep("p\\d+_\\w+",names(ds2), value = TRUE))
 (var_market   <- grep("m\\d+_\\w+",names(ds2), value = TRUE))
 (var_outcome  <- setdiff(names(ds2), c(var_practice,var_market)))
+(var_metro_one_hot <- c("m02_mid", "m03_small", "m04_nometro", "m01_large"))
 # ----- pairs --------------------
+set.seed(42)
 
-# variables describing the practice
-
-g2 <- ds2 %>%  
+# create separate data sets for practice and market
+d_practice <- ds2 %>%  
   dplyr::select_(.dots = c(var_outcome, var_practice ) ) %>% 
   dplyr::mutate(
     p01_female = as.factor(p01_female)
     ,p02_dpt = as.factor(p02_dpt)
-  ) %>% 
+  )
+d_practice %>% dplyr::glimpse(50)
+
+d_market <- ds2 %>%  
+  dplyr::select_(.dots = c(var_outcome, setdiff(var_market,var_metro_one_hot )))
+d_market %>% dplyr::glimpse(50)
+
+
+# variables describing the practice
+g2 <- d_practice %>%  
   dplyr::sample_frac(size = .01) %>% 
   GGally::ggpairs() 
-g2 %>% quick_save(name = "pairs-practice",width = 900, height = 900, res = 100)
+g2 %>% quick_save(name = "pairs-practice",width = 1200, height = 900, res = 100)
+
+# variables describing the market
+g3 <- d_market %>%  
+  dplyr::sample_frac(size = .01) %>% 
+  GGally::ggpairs() 
+g3 %>% quick_save(name = "pairs-market",width = 1200, height = 900, res = 100)
 
 
+# facets
 
-g1 <- g1 + 
-g1 %>% quick_save("practice")
+d_practice_long <- d_practice %>%
+# d_market_long <- d_market %>%  
+  dplyr::select(-p07_thera ) %>%
+  dplyr::sample_frac(size = .01) %>% 
+  reshape2::melt( id.vars= c(var_outcome,"p01_female","p02_dpt"))
+
+d_practice_long %>% dplyr::glimpse()
+
+g4 <- d_practice_long %>% 
+  ggplot2::ggplot(aes_string(x = "n_services", y = "value", color = "p01_female", shape = "p02_dpt"))+
+  # ggplot2::ggplot(aes_string(x = "total_payment", y = "value", color = "p01_female", shape = "p02_dpt"))+
+  geom_point(alpha = .4, size = 3)+
+  geom_rug(data = d_practice_long %>% dplyr::filter(is.na(value)))+
+  # labs(y = "", x = st.labs["n_services"])+
+  scale_color_brewer(palette="Set2")+
+  facet_wrap(~variable, scales="free_y", ncol=4) +
+  theme_minimal()
+g4 %>% quick_save(name = "facet-practice-n_services",width = 1200, height = 900, res = 100)
+# g4 %>% quick_save(name = "facet-practice-total_payment",width = 1200, height = 900, res = 100)
+
+
+d_market_long <- d_market %>%
+  dplyr::sample_frac(size = .01) %>% 
+  dplyr::mutate(
+    m01_metro = factor(m01_metro)
+  ) %>% 
+  reshape2::melt( id.vars= c(var_outcome,"m01_metro"))
+
+d_market_long %>% dplyr::glimpse()
+
+g5 <- d_market_long %>% 
+  # ggplot2::ggplot(aes_string(x = "n_services", y = "value", color = "m01_metro"))+
+  ggplot2::ggplot(aes_string(x = "total_payment", y = "value", color = "m01_metro"))+
+  geom_point(alpha = .4, size = 3)+
+  geom_rug(data = d_market_long %>% dplyr::filter(is.na(value)))+
+  scale_color_brewer(palette="Set2")+
+  facet_wrap(~variable, scales="free_y", ncol=4) +
+  theme_minimal()
+# g5 %>% quick_save(name = "facet-market-n_services",width = 1200, height = 900, res = 100)
+g5 %>% quick_save(name = "facet-market-total_payment",width = 1200, height = 900, res = 100)
+
   
 # ---- define-utility-functions ---------------
 
