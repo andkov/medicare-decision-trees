@@ -30,7 +30,7 @@ requireNamespace("testit"                  ) #For asserting conditions meet expe
 requireNamespace("readxl")
 # ---- declare-globals ---------------------------------------------------------
 path_input <- "./data-unshared/raw/pt_with_locations_reduced.csv"
-path_input_meta <- "./data-public/raw/meta-2019-01-15.xlsx"
+path_input_meta <- "./data-public/raw/meta-2019-02-12.xlsx"
 # ---- load-data ---------------------------------------------------------------
 ds0 <-  readr::read_csv(file = path_input)
 ds_meta <- readxl::read_excel(path_input_meta)
@@ -48,7 +48,7 @@ names(ds) <- tolower(names(ds))
 # store the original variable names to be used in metadata 
 # variable_names <- names(ds)
 # readr::write_csv(as.data.frame(variable_names), "./data-unshared/derived/rawnames.csv")
-ds %>% dplyr::glimpse(50)  
+ds %>% dplyr::glimpse(50)
 
 ds_meta %>% dplyr::glimpse(50)
 
@@ -73,7 +73,10 @@ names(ds) <-
   dplyr::select(name_short) %>% 
   as.list() %>% unlist() %>% as.character()
 
-ds %>% dplyr::glimpse()
+ds %>% dplyr::glimpse() 
+
+# we have identified that m06_agents and m07_thera are just inverses of each other
+# use only one during the analysis, they are perfectly correlated
 
 # ---- save-to-disk ----------------------------
 
