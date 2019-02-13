@@ -2,7 +2,7 @@
 title: "EDA-1: Initial Look"
 output:
   html_document:
-    css: ~/GitHub/ucf/medicare-decision-trees/libs/css/sidebar.css
+    css: ~/Documents/GitHub/ucf/medicare-decision-trees/libs/css/sidebar.css
     keep_md: yes
     toc: yes
 ---
