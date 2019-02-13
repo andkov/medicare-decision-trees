@@ -88,20 +88,40 @@ bag_boston <- randomForest::randomForest(
   ,importance = TRUE
 )
 bag_boston
+# evaluate performance
+yhat_bag <- stats::predict(bag_boston, newdata = ds_test)
+plot(yhat_bag, ds_test$medv)
+mean( (yhat_bag - ds_test$medv)^2 )
 
-# how does bagging compare
+# add ntree
+set.seed(1)
+bag_boston <- randomForest::randomForest(
+  medv ~ .
+  ,data = ds_train
+  ,mtry = 13 # predictors considered at each split
+  ,importance = TRUE
+  ,ntree = 25
+)
+bag_boston
+# evaluate performance
 yhat_bag <- stats::predict(bag_boston, newdata = ds_test)
 plot(yhat_bag, ds_test$medv)
 mean( (yhat_bag - ds_test$medv)^2 )
 
 
 
+### Random Forest
+rf_boston <- randomForest::randomForest(
+  formula = medv ~ .
+  ,data = ds_train
+  ,mtry = 6
+  ,importance = TRUE
+)
+yhat_rf <- stats::predict(rf_boston, newdata = ds_test)
+mean( (yhat_rf - ds_test$medv)^2 )
 
-
-
-
-
-
+randomForest::importance(rf_boston) 
+randomForest::varImpPlot(rf_boston)
 
 # Sonata form report structure
 # ---- dev-a-0 ---------------------------------

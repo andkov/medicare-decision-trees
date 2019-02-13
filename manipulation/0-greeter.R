@@ -27,19 +27,13 @@ requireNamespace("readr"                   )
 requireNamespace("tidyr"                   )
 requireNamespace("dplyr"                   ) #Avoid attaching dplyr, b/c its function names conflict with a lot of packages (esp base, stats, and plyr).
 requireNamespace("testit"                  ) #For asserting conditions meet expected patterns.
-
+requireNamespace("readxl")
 # ---- declare-globals ---------------------------------------------------------
-path_input <- "data-unshared/raw/Medicare_Provider_Util_Payment_PUF_CY2014.txt"
-
-
+path_input <- "./data-unshared/raw/pt_with_locations_reduced.csv"
+path_input_meta <- "./data-public/raw/meta-2019-01-15.xlsx"
 # ---- load-data ---------------------------------------------------------------
-ds0 <- readr::read_delim(
-   file            =  path_input
-  , delim         =  "\t"
-  , escape_double = FALSE
-  , trim_ws       = TRUE
-  
-  )
+ds0 <-  readr::read_csv(file = path_input)
+ds_meta <- readxl::read_excel(path_input_meta)
 
 # ---- tweak-data ------------------------------
 ds <- ds0
@@ -51,88 +45,39 @@ names(ds) <- gsub("\\(|\\)", "", names(ds))
 names(ds) <- gsub("__", "_", names(ds)) # double underscore into one
 names(ds) <- tolower(names(ds))
 
-# readr::write_csv(as.data.frame(names(ds)), "./data-unshared/derived/rawnames.csv")
+# store the original variable names to be used in metadata 
+# variable_names <- names(ds)
+# readr::write_csv(as.data.frame(variable_names), "./data-unshared/derived/rawnames.csv")
 ds %>% dplyr::glimpse(50)  
 
-# renames some of the variables 
+ds_meta %>% dplyr::glimpse(50)
 
-ds <- ds %>% 
-  dplyr::rename_(
-    "average_hcc_risk_score"  = "average_hcc_risk_score_of_beneficiaries"
-    # ,"non_metropolitan_area"  = "non_metropolitan_area_or_missing_9_counties_missing"
-    ,"non_metro_area"  = "non_metropolitan_area_or_missing_9_counties_missing"
-    ,"mid_metro_area"  = "mid_sized_metro_area"
-    ,"mean_age_benef_county"  = "medicare_ffs_benef_average_age_fee_for_service_2014"
-    ,"mean_hcc_benef_county"  = "medicare_ffs_bene_avg_hcc_score_fee_for_service_2014"
-    ,"medicare_cost"          = "standardized_risk_adjusted_per_capita_medicare_costs"
-    ,"total_medicare_payment" = "total_medicare_standardized_payment_amount"
-  )
+# renames some of the variables for easier handling
+# d_names_old <- names(ds) %>% tibble::as.tibble()
+# d_names_both <- d_names_old %>% 
+#   dplyr::left_join(
+#     ds_meta
+#     ,by = c("value" = "name_old")
+#   )
+# v_names_new <- d_names_both %>% dplyr::select(name_short) %>% 
+#   as.list() %>% unlist() %>% as.character()
+# names(ds) <- v_names_new
 
-# ---- group-variables ---------------------------------------
-practice <- c(
- "female" # Gender of the Physical Therapist                                               
- ,"dpt"# Reporting DPT degree                                              
- ,"number_of_hcpcs"# Number of HCPCS/CPT codes billed 
- #  HealthCare Common Procedure System/Current Procedural terminology
- ,"number_of_medicare_beneficiaries"  # Number of beneficiaries served
- ,"chrg_allowed_amt_ratio" # Charge to Medicare allowed amount ratio                         
- ,"medicare_stnd_amt_bene" # Average Medicare standardized payment amount per beneficiary                               
- ,"physical_agent_pct" # Proportion of physical agents 
- ,"proxy_for_n_of_new_patients"  # Number of new patients                        
- ,"average_age_of_beneficiaries" # Average age of beneficiaries                        
- # ,"average_hcc_risk_score_of_beneficiaries" # Average HCC risk score of beneficiaries              
- ,"average_hcc_risk_score"                    # Average HCC risk score of beneficiaries              
- 
- ,"large_metro_area"                                     
- ,"mid_metro_area"                                 
- # ,"mid_sized_metro_area"                                 
- ,"small_metro_area"                                     
- # ,"non_metropolitan_area_or_missing_9_counties_missing"  
- ,"non_metro_area"  
- )
+# a more elegant way of doing the same thing
+names(ds) <- 
+  dplyr::left_join(
+    names(ds) %>% tibble::as.tibble()
+    , ds_meta
+    , by = c("value" = "name_old")
+  ) %>% 
+  dplyr::select(name_short) %>% 
+  as.list() %>% unlist() %>% as.character()
 
-market <- c(
- "pcp_per_10k_pop_14" # Primary care physicians per 10,000 population, county level                                   
-,"pt_per_10k_pop_09" # PTs per 10,000 population (2009), county level                                   
-# ,"medicare_ffs_benef_average_age_fee_for_service_2014" # Average age of beneficiaries, county level 
-,"mean_age_benef_county"                               # Average age of beneficiaries, county level 
-,"pct_mdcr_ffs_benef_female_14" # Percent of female beneficiaries, county level                         
-# ,"medicare_ffs_bene_avg_hcc_score__fee_for_service_2014" # Average HCC risk score of beneficiaries, county level
-,"mean_hcc_benef_county"                                 # Average HCC risk score of beneficiaries, county level
-,"pct_mdcr_benef_elig_medcaid_14" # Percent of beneficiaries eligible for Medicaid, county level                      
-,"pct_mdcr_ff_benef_pop_14" # Beneficiaries as a share of total population, county level                           
- # ,"standardized_risk_adjusted_per_capita_medicare_costs" # Standardized Risk-Adjusted Per Capita Medicare Costs, county level 
- ,"medicare_cost"                                        # Standardized Risk-Adjusted Per Capita Medicare Costs, county level 
-,"median_household_income_2014" # Median Household Income, county level                        
-,"pct_65older_in_deep_poverty_14" # Percent of persons 65 or older in deep poverty, county level                       
-,"pt_bene_ratio"  # PTs per 10,000 beneficiaries, county level                                      
-)
-
-outcome <- c(
- "number_of_services"   # Number of services performed                                
-# ,"total_medicare_standardized_payment_amount" # Total Medicare standardized payment amount   
-,"total_medicare_payment"                       # Total Medicare standardized payment amount   
-)
-
-unaccounted <- c("therapeutic_pct")
-# sort the variables according to the level
-# ds <- ds %>% dplyr::select(c(practice, market, outcome, unaccounted))
-# store for possible tweaking in spreadsheets
-# readr::write_csv(as.data.frame(names(ds1)), "./data-unshared/derived/rawnames.csv")
-
-
-
-# ----- marginals --------------------
- 
-# ---- define-utility-functions ---------------
+ds %>% dplyr::glimpse()
 
 # ---- save-to-disk ----------------------------
-ds_out <- ds %>% 
-  dplyr::select(c(practice, market, outcome))
 
-ds_out %>% dplyr::glimpse()
-
-ds_out %>% 
+ds %>% 
   saveRDS("./data-unshared/derived/dto-0-greeted.rds")
 
 
