@@ -60,11 +60,7 @@ ds2 %>% dplyr::glimpse()
 
 sorted_names <- names(ds2)
 
-# ----- define-groups-of-variables ------------------
-# create vectores with vector names for each group
-(var_practice <- grep("p\\d+_\\w+",names(ds2), value = TRUE))
-(var_market   <- grep("m\\d+_\\w+",names(ds2), value = TRUE))
-(var_outcome  <- setdiff(names(ds2), c(var_practice,var_market)))
+
 
 
 # ----- local-functions --------------------
@@ -109,25 +105,30 @@ g1 <- d_cor %>%
   theme_minimal()
 
 
-g1 %>% quick_save(name = "outcome-correlations",width = 900, height = 600, res = 120)
+g1 %>% quick_save(name = "outcome-correlations",width = 600, height = 900, res = 120)
 
 # graph
 
   
 
-
+# ----- define-groups-of-variables ------------------
+# create vectores with vector names for each group
+(var_practice <- grep("p\\d+_\\w+",names(ds2), value = TRUE))
+(var_market   <- grep("m\\d+_\\w+",names(ds2), value = TRUE))
+(var_outcome  <- setdiff(names(ds2), c(var_practice,var_market)))
 # ----- pairs --------------------
 
-ds2 <- ds1 %>% 
-  dplyr::select_(.dots = c("total_medicare_payment", setdiff(practice_vars, metro_area_hot_one_vars), "metro_area") )
+# variables describing the practice
 
-g1 <- ds2 %>% 
+g2 <- ds2 %>%  
+  dplyr::select_(.dots = c(var_outcome, var_practice ) ) %>% 
   dplyr::mutate(
-    female = as.factor(female)
-    ,dpt = as.factor(dpt)
+    p01_female = as.factor(p01_female)
+    ,p02_dpt = as.factor(p02_dpt)
   ) %>% 
   dplyr::sample_frac(size = .01) %>% 
   GGally::ggpairs() 
+g2 %>% quick_save(name = "pairs-practice",width = 900, height = 900, res = 100)
 
 
 
