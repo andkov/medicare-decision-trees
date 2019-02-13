@@ -20,9 +20,10 @@ cat("\f") # clear console when working in RStudio
 # ---- load-packages -----------------------------------------------------------
 # Attach these packages so their functions don't need to be qualified: http://r-pkgs.had.co.nz/namespace.html#search-path
 library(magrittr) #Pipes
-
+library(mmpipe)
+library(ggplot2)
 # Verify these packages are available on the machine, but their functions need to be qualified: http://r-pkgs.had.co.nz/namespace.html#search-path
-requireNamespace("ggplot2"                 )
+# requireNamespace("ggplot2"                 )
 requireNamespace("readr"                   )
 requireNamespace("tidyr"                   )
 requireNamespace("dplyr"                   ) #Avoid attaching dplyr, b/c its function names conflict with a lot of packages (esp base, stats, and plyr).
@@ -30,72 +31,89 @@ requireNamespace("testit"                  ) #For asserting conditions meet expe
 
 # ---- declare-globals ---------------------------------------------------------
 path_input <- "./data-unshared/derived/dto-0-greeted.rds"
-
-practice_vars <- c(
-  "female" # Gender of the Physical Therapist                                               
-  ,"dpt"# Reporting DPT degree                                              
-  ,"number_of_hcpcs"# Number of HCPCS/CPT codes billed 
-  #  HealthCare Common Procedure System/Current Procedural terminology
-  ,"number_of_medicare_beneficiaries"  # Number of beneficiaries served
-  ,"chrg_allowed_amt_ratio" # Charge to Medicare allowed amount ratio                         
-  ,"medicare_stnd_amt_bene" # Average Medicare standardized payment amount per beneficiary                               
-  ,"physical_agent_pct" # Proportion of physical agents 
-  ,"proxy_for_n_of_new_patients"  # Number of new patients                        
-  ,"average_age_of_beneficiaries" # Average age of beneficiaries                        
-  # ,"average_hcc_risk_score_of_beneficiaries" # Average HCC risk score of beneficiaries              
-  ,"average_hcc_risk_score"                    # Average HCC risk score of beneficiaries              
-  
-  ,"large_metro_area"                                     
-  ,"mid_metro_area"                                 
-  # ,"mid_sized_metro_area"                                 
-  ,"small_metro_area"                                     
-  # ,"non_metropolitan_area_or_missing_9_counties_missing"  
-  ,"non_metro_area"  
-)
-
-market_vars <- c(
-  "pcp_per_10k_pop_14" # Primary care physicians per 10,000 population, county level                                   
-  ,"pt_per_10k_pop_09" # PTs per 10,000 population (2009), county level                                   
-  # ,"medicare_ffs_benef_average_age_fee_for_service_2014" # Average age of beneficiaries, county level 
-  ,"mean_age_benef_county"                               # Average age of beneficiaries, county level 
-  ,"pct_mdcr_ffs_benef_female_14" # Percent of female beneficiaries, county level                         
-  # ,"medicare_ffs_bene_avg_hcc_score__fee_for_service_2014" # Average HCC risk score of beneficiaries, county level
-  ,"mean_hcc_benef_county"                                 # Average HCC risk score of beneficiaries, county level
-  ,"pct_mdcr_benef_elig_medcaid_14" # Percent of beneficiaries eligible for Medicaid, county level                      
-  ,"pct_mdcr_ff_benef_pop_14" # Beneficiaries as a share of total population, county level                           
-  # ,"standardized_risk_adjusted_per_capita_medicare_costs" # Standardized Risk-Adjusted Per Capita Medicare Costs, county level 
-  ,"medicare_cost"                                        # Standardized Risk-Adjusted Per Capita Medicare Costs, county level 
-  ,"median_household_income_2014" # Median Household Income, county level                        
-  ,"pct_65older_in_deep_poverty_14" # Percent of persons 65 or older in deep poverty, county level                       
-  ,"pt_bene_ratio"  # PTs per 10,000 beneficiaries, county level                                      
-)
-
-outcome_vars <- c(
-  "number_of_services"   # Number of services performed                                
-  # ,"total_medicare_standardized_payment_amount" # Total Medicare standardized payment amount   
-  ,"total_medicare_payment"                       # Total Medicare standardized payment amount   
-)
-
-
-library(dplyr)
+path_input_meta <- "./data-public/raw/meta-2019-01-15.xlsx"
 # ---- load-data ---------------------------------------------------------------
 ds0 <- readRDS(file = path_input)
+ds_meta <- readxl::read_excel(path_input_meta)
+
 
 # ---- tweak-data ------------------------------
 ds <- ds0
 
-ds %>% dplyr::glimpse(80)  
+ds %>% dplyr::glimpse(50)  
 
-metro_area_hot_one_vars <-  c("large_metro_area","mid_metro_area","small_metro_area","non_metro_area")
+# create a categorical variable for metro area for graphing
+metro_area_hot_one_vars <-  c("m01_large","m02_mid","m03_small","m04_nometro")
 ds1 <- ds %>% 
   tidyr::gather("key","value",metro_area_hot_one_vars ) %>% 
   dplyr::mutate(
-    metro_area = gsub("(\\w+)_metro_area", "\\1", key)
+    m01_metro = gsub("m\\d+_(\\w+)", "\\1", key)
   ) %>% 
   dplyr::select(-key, -value) 
+ds1 %>% dplyr::glimpse()
+# add the newly created variable back to the dataset
+ds2 <- dplyr::left_join(
+  ds
+  ,ds1
+  ) 
+ds2 %>% dplyr::glimpse()
+
+sorted_names <- names(ds2)
+
+# ----- define-groups-of-variables ------------------
+# create vectores with vector names for each group
+(var_practice <- grep("p\\d+_\\w+",names(ds2), value = TRUE))
+(var_market   <- grep("m\\d+_\\w+",names(ds2), value = TRUE))
+(var_outcome  <- setdiff(names(ds2), c(var_practice,var_market)))
+
+
+# ----- local-functions --------------------
+quick_save <- function(g,name,...){
+  ggplot2::ggsave(
+    filename = paste0(name,".png"), 
+    plot     = g,
+    device   = png,
+    path     = "./sandbox/eda-2/prints/1/", # female marital educ poor_healt
+    # width    = width,
+    # height   = height,
+    # units = "cm",
+    # dpi      = 50,
+    limitsize = FALSE,
+    ...
+  )
+}
+
+# ---- linear-correlations ---------
+# all possible correlations among columsn
+
+d_cor <- ds2 %>% 
+  dplyr::select(-m01_metro) %>% 
+  as.matrix %>% 
+  cor() %>% 
+  as.data.frame() %>% 
+  tibble::rownames_to_column("var1") %>% 
+  tidyr::gather(var2,correlation, -var1) 
+
   
- 
-ds1 %>% glimpse()
+# correlation between two outcomes and each of the predictors
+g1 <- d_cor %>% 
+  dplyr::filter(var1 %in% c("n_services","total_payment") ) %>% 
+  # dplyr::arrange(var2) %>% 
+  dplyr::mutate(
+    var2 = factor(var2, levels = sorted_names),
+    var2 = factor(var2, levels = rev(levels(var2)))
+  ) %>% 
+  ggplot2::ggplot(aes(x = var2, y = correlation, fill = var1)) +
+  geom_bar(stat = "identity", position = "dodge")+
+  coord_flip()+
+  theme_minimal()
+
+
+g1 %>% quick_save(name = "outcome-correlations",width = 900, height = 600, res = 120)
+
+# graph
+
+  
 
 
 # ----- pairs --------------------
@@ -111,19 +129,7 @@ g1 <- ds2 %>%
   dplyr::sample_frac(size = .01) %>% 
   GGally::ggpairs() 
 
-quick_save <- function(g,name){
-  ggplot2::ggsave(
-    filename = paste0(name,".png"), 
-    plot     = g,
-    device   = png,
-    path     = "./sandbox/eda-2/prints/1/", # female marital educ poor_healt
-    width    = 1600,
-    height   = 1200,
-    # units = "cm",
-    dpi      = 200,
-    limitsize = FALSE
-  )
-}
+
 
 g1 <- g1 + 
 g1 %>% quick_save("practice")
