@@ -46,8 +46,8 @@ df_small <- df %>% dplyr::sample_frac(.05)
 df_small %>% TabularManifest::histogram_discrete("day_30_readmit")
 df_small %>% TabularManifest::histogram_discrete("admission_type")
 df_small %>% TabularManifest::histogram_discrete("transfers")
-df_small %>% TabularManifest::histogram_continuous("los")
-# df_small %>% TabularManifest::histogram_discrete("hosp") # factor, breaks
+df_small %>% TabularManifest::histogram_continuous("los") # length of stay
+df_small %>% TabularManifest::histogram_discrete("hosp") # 20 unique values
 df_small %>% TabularManifest::histogram_discrete("sex")
 df_small %>% TabularManifest::histogram_continuous("age")
 df_small %>% TabularManifest::histogram_discrete("dow") # day of the week
@@ -78,17 +78,23 @@ model <- randomForest(day_30_readmit ~ ., data = df[1:100], ntree = 500, do.trac
 
 # Doesn't look like the best
 model
-
 # What is the vote percentage?
 predictions <- model$votes[ ,"TRUE"]
 mean(predictions) # Averaging across discharges, 6% of trees vote for readmission.
 
+# ---- comment-2 ------------------ 
+gg_e <- ggRandomForests::gg_error(model)
+plot(gg_e)
+
+# gg_md <- ggRandomForests::gg_minimal_depth(model) 
+# gg_minimal_depth is not yet support for randomForest objects
+# plot(gg_md)
+
+# ---- original-3 -----------------------------
 library(ROCR)
 predictions <- model$votes[ ,"TRUE"]
-
-pred <- prediction(predictions, df$day_30_readmit)
-
-perf_AUC <- performance(pred, "auc") 
+pred <- ROCR::prediction(predictions, df$day_30_readmit)
+perf_AUC <- ROCR::performance(pred, "auc") 
 perf_AUC@y.values[[1]]
 
 perf_ROC <- performance(pred, "tpr", "fpr")
