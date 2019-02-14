@@ -39,6 +39,31 @@ var_nonstem    <- setdiff(names(df), var_stem)
 (var_count_drug      <- var_drug       %>% length()) #760
 # should be equal to 5096
 var_count_stem + var_count_procedure + var_count_diagnosis + var_count_drug
+
+
+# explore with marginals to understand the scales of the variables
+df_small <- df %>% dplyr::sample_frac(.05)
+df_small %>% TabularManifest::histogram_discrete("day_30_readmit")
+df_small %>% TabularManifest::histogram_discrete("admission_type")
+df_small %>% TabularManifest::histogram_discrete("transfers")
+df_small %>% TabularManifest::histogram_continuous("los")
+# df_small %>% TabularManifest::histogram_discrete("hosp") # factor, breaks
+df_small %>% TabularManifest::histogram_discrete("sex")
+df_small %>% TabularManifest::histogram_continuous("age")
+df_small %>% TabularManifest::histogram_discrete("dow") # day of the week
+df_small %>% TabularManifest::histogram_discrete("month")
+df_small %>% TabularManifest::histogram_discrete("admit.diag.mdc")
+# df_small %>% TabularManifest::histogram_continuous("id_dat")# factor, breaks
+
+# explore with a basic model
+model1 <- glm(
+  day_30_readmit ~ . 
+  # ,family = binomial(link="logit")
+  , data = df_small %>% select_(.dots = setdiff(var_stem,c("id_dat", "hosp"))) 
+) 
+source('./scripts/modeling/model-basic.R')
+model1 %>% basic_model_info()
+model1 %>% make_result_table()
 # end of first comment/interruption
 
 # ---- original-2 -----------------------------
