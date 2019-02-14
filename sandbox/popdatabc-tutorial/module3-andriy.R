@@ -1,6 +1,6 @@
 library(randomForest)
 
-df <- read.csv("readmissions.csv.gz")
+df <- read.csv("./sandbox/popdatabc-tutorial/readmissions.csv.gz")
 df$day_30_readmit <- factor(df$day_30_readmit)
 df$id_dat <- NULL # Remove so that the formula is easier.
 
