@@ -1,6 +1,49 @@
 library(randomForest)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
 
+# AK : I will break the original scripts into chunks interrupted by my comments and adjustments
+
+# ---- original-1 -----------------------------
+# the original starts here 
 df <- read.csv("./sandbox/popdatabc-tutorial/readmissions.csv.gz")
+
+# ---- comment-1 ------------------------------
+# first interruption to study the data set
+
+df %>% pryr::object_size()
+df %>% glimpse() # too many variables to comfortably glimpse at
+dim(df) # holy cow, 5095+ variables
+names(df)
+# subset variables into groups for easier management
+var_stem <-  c(
+  "day_30_readmit"  ,"admission_type"  ,"transfers"      
+  ,"los"            ,"hosp"            ,"sex"            
+  ,"age"            ,"day_30_readmits" ,"dow"            
+  ,"month"          ,"admit.diag.mdc"  ,"id_dat" 
+)   
+
+# looks like the rest of variables have three unique prefexes:
+# procedure, diagnosis, drug
+var_nonstem    <- setdiff(names(df), var_stem)
+(var_procedure <- grep("^procedure.\\d+$", var_nonstem, value = TRUE))
+(var_diagnosis <- grep("^diagnosis.\\d+$", var_nonstem, value = TRUE))
+(var_drug      <- grep("^drug.\\d+$", var_nonstem, value = TRUE))
+# check that we have accounted for all the variables
+
+(var_count_total     <- df %>% names() %>% length()) # 5095
+(var_count_stem      <- var_stem       %>% length()) # 12
+(var_count_procedure <- var_procedure  %>% length()) # 757
+(var_count_diagnosis <- var_diagnosis  %>% length()) #3566
+(var_count_drug      <- var_drug       %>% length()) #760
+# should be equal to 5096
+var_count_stem + var_count_procedure + var_count_diagnosis + var_count_drug
+# end of first comment/interruption
+
+# ---- original-2 -----------------------------
+# the original script continues
+
 df$day_30_readmit <- factor(df$day_30_readmit)
 df$id_dat <- NULL # Remove so that the formula is easier.
 
